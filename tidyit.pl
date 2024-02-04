@@ -3,6 +3,8 @@ use strict;
 
 use Data::Dumper;
 use Net::InstapaperAPI;
+use Try::Tiny;
+use open qw( :std :encoding(UTF-8) );
 
 # Setup
 my $CLIENT_KEY = $ENV{CLIENT_KEY};
@@ -27,29 +29,34 @@ my ($access_token, $access_token_secret) = $app->xauth_request_access_token(
 );
 
 #
-# Step 2: Grab unread bookmarks and folders
+# Step 2: Go through the folder items...
 #
-my $unread_bookmarks = $app->bookmarks;
 
 # Get a list of folder names...
 my $folder_map;
 foreach my $folder (@{$app->folders}) {
     $folder_map->{$folder->{title}} = $folder;
-}
 
-#
-# Step 3: Move bookmarks to folders if suitable folder exists.
-#
-#         e.g. 'Money Stuff: OpenAI Is a Strange Nonprofit'
-#         moves to a folder 'Money Stuff' if that exists.
-#
-foreach my $bm (@{$unread_bookmarks}) {
-    my ($first, $second) = split(':', $bm->{title}) if $bm->{title};
-    if ($first && $second && $folder_map->{$first}) {
-        warn "$bm->{title} should be moved to $first folder";
-        my $folder = $folder_map->{$first};
+    my $bms = $app->bookmarks(
+        folder_id => $folder->{folder_id},
+        limit => 200,
+    );
 
-        my $result = $app->bookmark_move($bm->{bookmark_id}, $folder->{folder_id});
-        # warn Dumper($result);
+    #
+    # Step 3: Try get the text, if we can't delete it
+    #
+    foreach my $bm (@{$bms}) {
+        my $result;
+        try {
+            $result = $app->bookmark_text($bm->{bookmark_id});
+        } catch {
+            warn $_;
+            warn "Title $bm->{bookmark_id} $bm->{title} doesn't look avaialble...\n";
+            $app->bookmark_delete($bm->{bookmark_id});
+        };
+
+        if ($result) {
+            warn "Title $bm->{bookmark_id} $bm->{title} is OK\n";
+        }
     }
 }
