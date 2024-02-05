@@ -2,7 +2,7 @@ use warnings;
 use strict;
 
 use Data::Dumper;
-use Net::InstapaperAPI;
+use Instapaper::API;
 use Try::Tiny;
 use open qw( :std :encoding(UTF-8) );
 
@@ -16,7 +16,7 @@ my $X_AUTH_PASSWORD = $ENV{X_AUTH_PASSWORD};
 #
 # Step 1: Login to Instapaper API
 #
-my $app = Net::InstapaperAPI->new( $CLIENT_KEY, $CLIENT_SECRET );
+my $app = Instapaper::API->new( $CLIENT_KEY, $CLIENT_SECRET );
 
 unless ($app->consumer_key && $app->consumer_secret) {
     die "You must go get a consumer key and secret from App\n";
@@ -34,10 +34,10 @@ my ($access_token, $access_token_secret) = $app->xauth_request_access_token(
 
 # Get a list of folder names...
 my $folder_map;
-foreach my $folder (@{$app->folders}) {
+foreach my $folder (@{$app->folder_list}) {
     $folder_map->{$folder->{title}} = $folder;
 
-    my $bms = $app->bookmarks(
+    my $bms = $app->bookmark_list(
         folder_id => $folder->{folder_id},
         limit => 200,
     );

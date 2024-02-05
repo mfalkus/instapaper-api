@@ -1,24 +1,26 @@
-package Net::InstapaperAPI;
+package Instapaper::API;
 
 use warnings;
 use strict;
 
 use open qw( :std :encoding(UTF-8) );
-
+use base qw(Net::OAuth::Simple);
 use JSON;
 
-use base qw(Net::OAuth::Simple);
-
 # See https://www.instapaper.com/api for details...
-my $BASE = "https://www.instapaper.com";
-my $API_VERSION = "api/1";
-my $ACCESS_TOKEN = "oauth/access_token";
-my $ACCOUNT = "account/verify_credentials";
-my $BOOKMARKS = "bookmarks/list";
-my $BOOKMARKS_MOVE = "bookmarks/move";
-my $BOOKMARKS_TEXT = "bookmarks/get_text";
-my $BOOKMARKS_DELETE = "bookmarks/delete";
-my $FOLDERS = "folders/list";
+my $BASE            = "https://www.instapaper.com";
+my $API_VERSION     = "api/1";
+my $ACCESS_TOKEN    = "oauth/access_token";
+my $ACCOUNT         = "account/verify_credentials";
+
+my $BOOKMARKS           = "bookmarks/list";
+my $BOOKMARKS_MOVE      = "bookmarks/move";
+my $BOOKMARKS_TEXT      = "bookmarks/get_text";
+my $BOOKMARKS_DELETE    = "bookmarks/delete";
+
+my $FOLDERS         = "folders/list";
+my $FOLDERS_ADD     = "folders/add";
+my $FOLDERS_DELETE  = "folders/delete";
 
 sub new {
     my ($class, $key, $secret) = @_;
@@ -29,8 +31,8 @@ sub new {
         },
         protocol_version => '1.0a',
         urls => {
-            authorization_url => 'http://unused?',
-            request_token_url => join('/', $BASE , $API_VERSION , $ACCESS_TOKEN),
+            # authorization_url => '', # Unused for xauth
+            # request_token_url => '', # Unused for xauth
             access_token_url  => join('/', $BASE , $API_VERSION , $ACCESS_TOKEN),
         }
     );
@@ -47,7 +49,7 @@ sub update_restricted_resource {
     return decode_json($response->decoded_content);
 }
 
-sub bookmarks {
+sub bookmark_list {
     my ($self, %args) = @_;
 
     # Output is array, e.g.:
@@ -77,7 +79,8 @@ sub bookmarks {
 sub bookmark_move {
     my ($self, $bookmark_id, $folder_id) = @_;
 
-    die("Must supply bookmark_id and folder_id") unless $bookmark_id && $folder_id;
+    die("Must supply bookmark_id") unless $bookmark_id;
+    die("Must supply folder_id") unless $folder_id;
 
     # Sadly this resets the `time` in the API response, which can cause confusion!
     return $self->update_restricted_resource($BOOKMARKS_MOVE, (
@@ -111,12 +114,28 @@ sub bookmark_text {
     return $response->decoded_content;
 }
 
-sub folders {
+sub folder_list {
     my ($self, $limit) = @_;
     $limit ||= 100;
 
     return $self->update_restricted_resource($FOLDERS, (
         limit => $limit,
+    ));
+}
+
+sub folder_add {
+    my ($self, $folder_title) = @_;
+
+    return $self->update_restricted_resource($FOLDERS_ADD, (
+        title => $folder_title
+    ));
+}
+
+sub folder_delete {
+    my ($self, $folder_id) = @_;
+
+    return $self->update_restricted_resource($FOLDERS_DELETE, (
+        folder_id => $folder_id
     ));
 }
 
