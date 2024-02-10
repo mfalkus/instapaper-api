@@ -33,6 +33,11 @@ jobs:
 
       # Runs a set of commands using the runners shell
       - name: Run a multi-line script
+        env:
+          CLIENT_KEY: ${{ secrets.CLIENT_KEY }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          X_AUTH_USERNAME: ${{ secrets.X_AUTH_USERNAME }}
+          X_AUTH_PASSWORD: ${{ secrets.X_AUTH_PASSWORD }}
         run: |
           echo Add other actions to build,
           PERL5LIB=lib perl examples/bookmarks-list.pl
