@@ -39,5 +39,5 @@ jobs:
           X_AUTH_USERNAME: ${{ secrets.X_AUTH_USERNAME }}
           X_AUTH_PASSWORD: ${{ secrets.X_AUTH_PASSWORD }}
         run: |
-          echo "$CLIENT_KEY"
+          echo "Running with $CLIENT_KEY key"
           PERL5LIB=lib perl examples/bookmarks-list.pl
