@@ -39,5 +39,5 @@ jobs:
           X_AUTH_USERNAME: ${{ secrets.X_AUTH_USERNAME }}
           X_AUTH_PASSWORD: ${{ secrets.X_AUTH_PASSWORD }}
         run: |
-          echo Add other actions to build,
+          echo "$CLIENT_KEY"
           PERL5LIB=lib perl examples/bookmarks-list.pl
